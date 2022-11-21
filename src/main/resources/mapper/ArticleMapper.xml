@@ -1,0 +1,323 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cc.lijad.blog.dao.ArticleMapper">
+
+    <!--Integer saveArticle(Article article);-->
+    <!--待优化，还要写动态sql-->
+    <insert id="saveArticle">
+        insert into
+            blog_article(user_id,title,description,image,content,content_md,create_time,update_time,category_id,comment_count,visits,poll_count,is_comment,is_top,is_reward,status)
+        values (
+            #{userId},
+            #{title},
+            #{description},
+            #{image},
+            #{content},
+            #{contentMd},
+            #{createTime},
+            #{updateTime},
+            #{categoryId},
+            #{commentCount},
+            #{visits},
+            #{pollCount},
+            #{isComment},
+            #{isTop},
+            #{isReward},
+            #{status}
+        )
+
+
+    </insert>
+
+    <!--  List<Article> listArticle();-->
+    <select id="listArticle" resultType="cc.lijad.blog.domain.entity.Article">
+       select
+            id,
+            user_id,
+            title,
+            description,
+            image,
+            content,
+            content_md,
+            create_time,
+            update_time,
+            category_id,
+            comment_count,
+            visits,
+            poll_count,
+            is_comment,
+            is_top,
+            is_reward,
+            status
+        from
+            blog_article
+
+    </select>
+
+
+    <resultMap id="baseArticleResult" type="cc.lijad.blog.queryvo.BaseQueryArticle">
+        <id property="id" column="id"></id>
+        <result property="title" column="title"></result>
+        <result property="description" column="description"></result>
+        <result property="userId" column="user_id"></result>
+        <!---->
+        <result property="nickname" column="nickname"></result>
+        <result property="createTime" column="create_time"></result>
+        <result property="updateTime" column="update_time"></result>
+        <result property="visits" column="visits"></result>
+        <result property="pollCount" column="poll_count"></result>
+        <result property="commentCount" column="comment_count"></result>
+        <result property="categoryId" column="category_id"></result>
+        <!---->
+        <result property="categoryName" column="categoryName"></result>
+        <result property="image" column="image"></result>
+        <result property="isTop" column="is_top"></result>
+        <result property="status" column="status"></result>
+
+        <result property="userAvatar" column="userAvatar"></result>
+
+        <!--多对多，使用该方法暂时无法同时实现分页功能，先放弃。采用分步查询-->
+        <!--        <collection property="tagList" resultMap="tagResult"></collection>-->
+    </resultMap>
+    <resultMap id="tagResult" type="cc.lijad.blog.domain.entity.Tag">
+        <id property="id" column="tid"></id>
+        <result property="name" column="tagName"></result>
+        <result property="url" column="tagUrl"></result>
+        <result property="status" column="tagStatus"></result>
+    </resultMap>
+
+    <!--待优化，多表联查
+        查询博客信息，用于在首页展示
+        还要在service中处理tagList
+    -->
+    <!-- List<Article> pageArticle();-->
+    <resultMap id="miniArticleResult" type="cc.lijad.blog.queryvo.MiniArticle" extends="baseArticleResult">
+
+    </resultMap>
+    <select id="pageMiniArticle" resultMap="miniArticleResult">
+        select
+        a.id,
+        a.title,
+        a.description,
+        a.user_id,
+        u.nickname,
+        a.create_time,
+        a.update_time,
+        a.visits,
+        a.poll_count,
+        a.comment_count,
+        a.category_id,
+        c.name as categoryName,
+        a.image,
+        a.is_top,
+        a.status,
+        u.avatar as userAvatar
+        from
+        blog_article a
+        join
+        blog_user u
+        on
+        a.user_id = u.id
+        join
+        blog_category c
+        on
+        a.category_id = c.id
+        <where>
+            <if test="title != null and title != '' ">
+                a.title like '%' #{title} '%'
+            </if>
+            <if test="categoryId != null and categoryId > 0">
+                and a.category_id = #{categoryId}
+            </if>
+            <if test="createTime != null">
+                and date_format(a.create_time,"%Y") = date_format(#{createTime},"%Y")
+            </if>
+        </where>
+        order by
+        a.create_time desc
+    </select>
+
+
+    <!--DetailArticle 只比baseArticleResult多两个属性 content contentMd-->
+    <!--根据articleId查单条，展示详细信息。这里resultMap继承了上面的baseArticleResult-->
+    <!--和首页展示一样，还要在service中处理tagList-->
+    <resultMap id="detailArticleResult" type="cc.lijad.blog.queryvo.DetailArticle" extends="baseArticleResult">
+        <result property="content" column="content"></result>
+        <result property="contentMd" column="content_md"></result>
+    </resultMap>
+    <select id="getDetailArticleById" resultMap="detailArticleResult">
+        select
+            a.id,
+            a.title,
+            a.description,
+            a.user_id,
+            u.nickname,
+            a.content,
+            a.content_md,
+            a.create_time,
+            a.update_time,
+            a.visits,
+            a.poll_count,
+            a.comment_count,
+            a.category_id,
+            c.name as categoryName,
+            a.image,
+            a.is_top,
+            a.status,
+            u.avatar as userAvatar
+        from
+            blog_article a
+        join
+            blog_user u
+        on
+            a.user_id = u.id
+        join
+            blog_category c
+        on
+            a.category_id = c.id
+        where
+            a.id = #{articleId}
+    </select>
+
+    <!--  查询所有年份和对应的文章数量  -->
+    <select id="listArticleYear" resultType="java.lang.String">
+        select DISTINCT DATE_FORMAT(create_time,"%Y") as year from blog_article
+    </select>
+
+    <!--查询某个标签下的文章。要在service中处理-->
+    <resultMap id="tagArticleResult" type="cc.lijad.blog.queryvo.TagQueryArticle" extends="baseArticleResult">
+        <result property="tag.id" column="tid"></result>
+        <result property="tag.name" column="tagName"></result>
+        <result property="tag.url" column="tagUrl"></result>
+        <result property="tag.status" column="tagStatus"></result>
+    </resultMap>
+    <select id="pageMiniArticleByTagId" resultMap="miniArticleResult">
+        select
+            a.id,
+            a.title,
+            a.description,
+            a.user_id,
+            u.nickname,
+            a.content,
+            a.content_md,
+            a.create_time,
+            a.update_time,
+            a.visits,
+            a.poll_count,
+            a.comment_count,
+            a.category_id,
+            c.name as categoryName,
+            a.image,
+            a.is_top,
+            a.status,
+            u.avatar as userAvatar,
+
+            t.id as tid,
+            t.name as tagName,
+            t.url as tagUrl,
+            t.status as tagStatus
+        from
+            blog_article a
+        join
+            blog_user u
+        on
+            a.user_id = u.id
+        join
+            blog_category c
+        on
+            a.category_id = c.id
+        join
+            blog_article_tag bat
+        on
+            a.id = bat.article_id
+        join
+            blog_tag t
+        on
+            t.id = bat.tag_id
+        where
+            t.id = #{tagId}
+    </select>
+
+    <!--updateArticleCommentCount，添加评论数量-->
+    <update id="updateArticleCommentCount">
+        update blog_article set comment_count = comment_count +1 where id = #{id}
+    </update>
+
+
+
+
+
+    <!--查询某个分类下的文章。和首页展示一样，还要在service中处理tagList-->
+    <!--    List<MiniArticle> pageMiniArticleByCategoryId(long categoryId);-->
+    <select id="pageMiniArticleByCategoryId" resultMap="miniArticleResult">
+        select
+            a.id,
+            a.title,
+            a.description,
+            a.user_id,
+            u.nickname,
+            a.content,
+            a.content_md,
+            a.create_time,
+            a.update_time,
+            a.visits,
+            a.poll_count,
+            a.comment_count,
+            a.category_id,
+            c.name as categoryName,
+            a.image,
+            a.is_top,
+            a.status,
+            u.avatar as userAvatar
+        from
+            blog_article a
+        join
+            blog_user u
+        on
+            a.user_id = u.id
+        join
+            blog_category c
+        on
+            a.category_id = c.id
+        where
+            a.category_id = #{categoryId}
+    </select>
+    <!--  根据时间查询  -->
+    <select id="pageMiniArticleForTime" resultMap="miniArticleResult">
+        select
+            a.id,
+            a.title,
+            a.description,
+            a.user_id,
+            u.nickname,
+            a.create_time,
+            a.update_time,
+            a.visits,
+            a.poll_count,
+            a.comment_count,
+            a.category_id,
+            c.name as categoryName,
+            a.image,
+            a.is_top,
+            a.status,
+            u.avatar as userAvatar
+        from
+            blog_article a
+        join
+            blog_user u
+        on
+            a.user_id = u.id
+        join
+            blog_category c
+        on
+            a.category_id = c.id
+        where
+            date_format(a.create_time,"%Y") = #{time}
+
+    </select>
+
+
+
+</mapper>

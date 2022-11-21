@@ -1,0 +1,24 @@
+server:
+  port: 9999
+
+spring:
+  profiles:
+    active: pro
+
+# PageHelper分页插件
+pagehelper:
+  helperDialect: mysql
+  # 是否开启合理化
+  reasonable: true
+  supportMethodsArguments: true
+  params: count=countSql
+
+
+# token设置 （未实装）
+token:
+  # 令牌自定义标识
+  header: Authorization
+  # 令牌密钥
+  secret: abcdefghijklmnopqrstuvwxyz
+  # 令牌有效期（默认30分钟）
+  expireTime: 480

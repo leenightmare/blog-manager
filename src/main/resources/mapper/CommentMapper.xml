@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cc.lijad.blog.dao.CommentMapper">
+    <!--查询一级评论-->
+    <select id="getParentCommentOfArticle" resultType="cc.lijad.blog.queryvo.CommentArticleVO">
+            select
+                comm.id,
+                comm.parent_id,
+                comm.user_agent,
+                comm.user_ip,
+                comm.user_email,
+                comm.user_id,
+                comm.content,
+                comm.reply_user_id,
+                comm.target_type,
+                comm.article_id,
+                comm.create_time,
+                comm.status,
+                comm.user_nickname,
+                comm.reply_user_nickname,
+                comm.user_avatar,
+                comm.reply_user_avatar
+            from
+                blog_comment comm
+            where
+                comm.parent_id is null
+            and
+                comm.article_id = #{articleId}
+        </select>
+
+    <!--查询二级评论-->
+    <!--    List<CommentArticleVO> getChildCommentOfArticle(long commentId);-->
+    <select id="getChildCommentOfArticle" resultType="cc.lijad.blog.queryvo.CommentArticleVO">
+        select
+                rep.id,
+                rep.parent_id,
+                rep.user_agent,
+                rep.user_ip,
+                rep.user_email,
+                rep.user_id,
+                rep.content,
+                rep.reply_user_id,
+                rep.target_type,
+                rep.article_id,
+                rep.create_time,
+                rep.status,
+                rep.user_nickname,
+                rep.reply_user_nickname,
+                rep.user_avatar,
+                rep.reply_user_avatar
+        from
+                blog_comment comm
+        join
+                blog_comment rep
+        on
+                comm.id = rep.parent_id
+        where
+				rep.parent_id = #{commentId}
+
+    </select>
+
+    <!--查询留言-->
+    <!--getPageMessageComment-->
+    <select id="getPageMessageComment" resultType="cc.lijad.blog.queryvo.CommentArticleVO">
+            select
+                comm.id,
+                comm.parent_id,
+                comm.user_agent,
+                comm.user_ip,
+                comm.user_email,
+                comm.user_id,
+                comm.content,
+                comm.reply_user_id,
+                comm.target_type,
+                comm.article_id,
+                comm.create_time,
+                comm.status,
+                comm.user_nickname,
+                comm.reply_user_nickname,
+                comm.user_avatar,
+                comm.reply_user_avatar
+            from
+                blog_comment comm
+            where
+                comm.parent_id is null
+            and
+                comm.article_id is null
+    </select>
+
+    <!--添加评论-->
+    <!--saveComment-->
+    <insert id="saveComment">
+        insert into
+            blog_comment(
+                parent_id,
+                user_agent,
+                user_ip,
+                user_email,
+                user_id,
+                user_nickname,
+                content,
+                reply_user_id,
+                reply_user_nickname,
+                target_type,
+                article_id,
+                create_time,
+                status,
+                user_avatar,
+                reply_user_avatar
+            )
+        values (
+                #{parentId},
+                #{userAgent},
+                #{userIp},
+                #{userEmail},
+                #{userId},
+                #{userNickName},
+                #{content},
+                #{replyUserId},
+                #{replyUserNickName},
+                #{targetType},
+                #{articleId},
+                #{createTime},
+                #{status},
+                #{userAvatar},
+                #{replyUserAvatar}
+        )
+    </insert>
+
+</mapper>

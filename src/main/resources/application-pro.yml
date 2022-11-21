@@ -1,0 +1,23 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/ksblog?useUnicode=true&characterEncoding=UTF-8&serverTimezone=GMT%2B8&useSSL=false
+    username: root
+    password: 123
+
+
+logging:
+  level:
+    root: warn
+    cc.lijad: info
+  file:
+    path: /home/log/blog-pro.log
+
+
+# mybatis
+mybatis:
+  # 映射文件路径
+  mapper-locations: classpath:mapper/**/*.xml
+  configuration:
+    # 开启驼峰命名
+    map-underscore-to-camel-case: true

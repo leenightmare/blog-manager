@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cc.lijad.blog.dao.TagMapper">
+    <!--List<Tag> listTag();-->
+    <select id="listTag" resultType="cc.lijad.blog.domain.entity.Tag">
+        select id,name,url,status from blog_tag
+    </select>
+
+    <select id="listTagWithCount" resultType="cc.lijad.blog.queryvo.TagWithCountVO">
+        select
+            t.id,
+            t.name,
+            t.url,
+            t.status,
+            count(*) as articleCount
+        from
+            blog_tag t
+        join
+            blog_article_tag bat
+        on
+            t.id = bat.tag_id
+        join
+            blog_article a
+        on
+            a.id = bat.article_id
+        GROUP BY
+            t.id
+
+    </select>
+
+    <!-- List<Tag> listTagOfArticle(Long articleId);-->
+    <select id="listTagOfArticle" resultType="cc.lijad.blog.domain.entity.Tag">
+        select t.id,t.name,t.url,t.status
+        from blog_tag t
+        join blog_article_tag bat
+        on t.id = bat.tag_id
+        join blog_article a
+        on a.id = bat.article_id
+        where a.id = #{articleId}
+    </select>
+</mapper>
